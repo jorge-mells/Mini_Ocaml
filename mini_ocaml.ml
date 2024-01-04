@@ -6,7 +6,7 @@ let rec foldl f l b =
 type 'b env = (string * 'b) list
 (*ASG and CSG using ADTs*)
 (*CSG*)
-type token = ADD | SUB | MUL | LEQ | DIV | MOD |COLON | FUNOP
+type token = ADD | SUB | MUL | LEQ | DIV | MOD |COLON
            | LP | RP | EQ | ARROW
            | LET | REC | IN | FUN | IF | THEN | ELSE 
            | INT | BOOL
@@ -237,20 +237,13 @@ let parse_op ts =
   | DIV :: ts -> Some (create Div, 4, 5, ts)
   | MUL :: ts -> Some (create Mul, 6, 7, ts)
   | MOD :: ts -> Some (create Mod, 6, 7, ts)
-  | FUNOP :: ts -> Some (create_f, 8,9,ts)
+  | VAR x :: ts -> Some (create_f, 8, 9 VAR x :: ts)
+  | ICON x :: ts -> Some (create_f, 8, 9 ICON x :: ts)
+  | BCON x :: ts -> Some (create_f, 8, 9 BCON x :: ts)
+  | LP :: ts -> Some (create_f, 8, 9 LP :: ts)
   | _ -> None
-let rec lex_func ts = match ts with
-                 | [] -> []
-                 | VAR x :: VAR y :: t -> VAR x :: FUNOP :: lex_func (VAR y :: t) 
-                 | VAR x :: ICON y :: t -> VAR x :: FUNOP :: lex_func (ICON y :: t)
-                 | VAR x :: LP :: t -> VAR x :: FUNOP :: lex_func (LP :: t)
-                 | RP :: VAR x :: t -> RP :: FUNOP :: lex_func (VAR x :: t)
-                 | RP :: ICON x :: t -> RP :: FUNOP :: lex_func (ICON x :: t)
-                 | RP :: LP :: t -> RP :: FUNOP :: lex_func (LP :: t)
-                 | ICON x :: VAR y :: t -> ICON x :: FUNOP :: lex_func (VAR y :: t)
-                 | ICON x :: ICON y :: t -> ICON x :: FUNOP :: lex_func (ICON y :: t)
-                 | ICON x :: LP :: t -> ICON x :: FUNOP :: lex_func (LP :: t)
-                 | x::t -> x :: lex_func t 
+
+(* function type parser *)
 let parse_binary_ty parse_simpl parse_op ts = 
   let rec binary p (l, ts) =   
     match parse_op ts with
@@ -260,6 +253,8 @@ let parse_binary_ty parse_simpl parse_op ts =
           let r, ts = binary rp (parse_simpl ts')
           in binary p (op l r, ts) 
   in binary 0 (parse_simpl ts)
+
+(*type parser*)
 let parse_op_ty ts =
   let create_ty l r = Func (l,r) in
   match ts with
@@ -269,7 +264,9 @@ let rec parse_ty ts = parse_binary_ty parse_simple_expr parse_op_ty ts and parse
   | INT :: ts -> Int, ts
   | BOOL :: ts -> Bool, ts
   | _ -> failwith "not a type"
-let rec parse_expr ts = parse_binary parse_simple_expr parse_op (lex_func ts)
+
+(* expr parser *)
+let rec parse_expr ts = parse_binary parse_simple_expr parse_op ts
 and parse_simple_expr ts = match ts with
   | LP :: ts -> let e ,ts = parse_expr ts in
                 let ts = expect RP ts in
@@ -313,6 +310,7 @@ and parse_simple_expr ts = match ts with
   | _ -> failwith "syntax error"
 let parse_f (exp,ts) = match ts with | END::_ -> exp | _ -> failwith "incomplete parsing" ;;
 
+(* ocaml expression evaluator *)
 let evaluate_ocaml_expression s = 
   let lexed = lex s 
   in let parsed = parse_f (parse_expr lexed)
