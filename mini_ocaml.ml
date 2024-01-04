@@ -28,7 +28,8 @@ type va = Ival of int | Bval of bool | Tval of va * va | Fval of string * expr *
 let rec update k v env = 
   match env with
   | [] -> [(k,v)]
-  | (k',v')::t -> if k = k' then (k,v)::t else (k',v')::update k v env
+  | (k',v')::t -> if k = k' then (k,v)::t else (k',v')::update k v t
+;;
 
 let rec remove k env =
   match env with
@@ -83,11 +84,12 @@ let rec check_ty (tenv: tenv) expr =
                     in (match type_e1 with 
                         | Some (Func (x,y)) -> if check_ty tenv e2 = Some x then Some y else None 
                         | _ -> None)
-  | Letrec (id1,id2,ty1,ty2,e1,e2) -> let types = foldl (fun (a,c) b -> update a c b) ([(id1,ty1);(id2,Func (ty1,ty2))]) (tenv) in let check_e1 = check_ty types e1 
+  | Letrec (id1,id2,ty1,ty2,e1,e2) -> let types = foldl (fun (a,c) b -> update a c b) ([(id2,ty1);(id1,Func (ty1,ty2))]) (tenv) in let check_e1 = check_ty types e1 
                                           in (match check_e1 with 
                                               | None -> None 
                                               | Some _ -> check_ty (remove id2 types) e2)
 
+                                              
 (*evaluation*)
 
 let rec eval (venv: venv) expr =
@@ -111,9 +113,9 @@ let rec eval (venv: venv) expr =
                             | _ -> failwith "error")
   | Let (id,e1,e2) -> let val_e1 = eval venv e1 
                       in eval (update id val_e1 venv) e2
-  | If (e1,e2,e3) -> (match e1 with 
-                     | Bcon true -> eval venv e2
-                     | Bcon false -> eval venv e3
+  | If (e1,e2,e3) -> (match eval venv e1 with 
+                     | Bval true -> eval venv e2
+                     | Bval false -> eval venv e3
                      | _ -> failwith ("error"))
   | Lam (id,_,e) -> Fval (id,e,venv)
   | App (e1,e2) -> let closure = eval venv e1  in
@@ -126,6 +128,7 @@ let rec eval (venv: venv) expr =
   | Letrec (id1,id2,_,_,e1,e2) -> let closure = Rval (id1,id2,e1,venv) 
                                       in let new_venv = update id1 closure venv
                                       in eval new_venv e2 
+
 
 (*lexer*)
 let lex s = 
@@ -308,7 +311,7 @@ and parse_simple_expr ts = match ts with
                  let e, ts = parse_expr ts in
                  Lam (x,ty,e), ts
   | _ -> failwith "syntax error"
-let parse_f (exp,ts) = match ts with | END::_ -> exp | _ -> failwith "incomplete parsing" ;;
+let parse_f (exp,ts) = match ts with | END::_ -> exp | _ -> failwith "incomplete parsing"
 
 (* ocaml expression evaluator *)
 let evaluate_ocaml_expression s = 
