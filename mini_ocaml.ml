@@ -19,6 +19,7 @@ type expr = Icon of int | Bcon of bool | Pair of expr * expr | Var of string
             | Let of string * expr * expr 
             | If of expr * expr * expr
             | Letrec of string * string * ty * ty * expr * expr
+            (*Let f (x:int) :int = f x in x is Letrec ("f","x",Int (the type of x),Int (the return type of f), f x, f)*)
             | App of expr * expr
             | Lam of string * ty * expr
             | Bracket of expr
@@ -311,7 +312,12 @@ and parse_simple_expr ts = match ts with
                  let e, ts = parse_expr ts in
                  Lam (x,ty,e), ts
   | _ -> failwith "syntax error"
+
+  (*checking the end of input*)
 let parse_f (exp,ts) = match ts with | END::_ -> exp | _ -> failwith "incomplete parsing"
+
+(*final parser*)
+let final_parse exp = parse_f (parse_expr exp)
 
 (* ocaml expression evaluator *)
 let evaluate_ocaml_expression s = 
