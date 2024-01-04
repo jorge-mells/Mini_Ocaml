@@ -237,10 +237,10 @@ let parse_op ts =
   | DIV :: ts -> Some (create Div, 4, 5, ts)
   | MUL :: ts -> Some (create Mul, 6, 7, ts)
   | MOD :: ts -> Some (create Mod, 6, 7, ts)
-  | VAR x :: ts -> Some (create_f, 8, 9 VAR x :: ts)
-  | ICON x :: ts -> Some (create_f, 8, 9 ICON x :: ts)
-  | BCON x :: ts -> Some (create_f, 8, 9 BCON x :: ts)
-  | LP :: ts -> Some (create_f, 8, 9 LP :: ts)
+  | VAR x :: ts -> Some (create_f, 8, 9, VAR x :: ts)
+  | ICON x :: ts -> Some (create_f, 8, 9, ICON x :: ts)
+  | BCON x :: ts -> Some (create_f, 8, 9, BCON x :: ts)
+  | LP :: ts -> Some (create_f, 8, 9, LP :: ts)
   | _ -> None
 
 (* function type parser *)
