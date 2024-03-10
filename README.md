@@ -25,3 +25,4 @@ First real project
 <li>use git checkout to switch between branches</li>
 <li>other commands include git stash(probably advanced for now)</li>
 </ul>
+go to this <a href = "https://www.loginradius.com/blog/engineering/git-commands/">link</a> for more info
