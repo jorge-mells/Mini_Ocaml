@@ -21,4 +21,7 @@ First real project
 <li>use git fetch <repo name> to get data from a folder in the same url without updating the local repo. git pull combines git fetch and git merge</li>
 <li>to push any commits online, use git push <reponame> <branchname></li>
 <li>use git branch <name> to create a new branch and git checkout <name> to switch branches. use git merge <name> to merge a branch with main (master)</li>
+<li>use git log just like git status. It should be less detailed than git diff but more detailed than git status(maybe)</li>
+<li>use git checkout to switch between branches</li>
+<li>other commands include git stash(probably advanced for now)</li>
 </ul>
